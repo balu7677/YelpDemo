@@ -8,23 +8,47 @@
 
 import UIKit
 
-class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FiltersViewControllerDelegate {
+class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FiltersViewControllerDelegate, UISearchBarDelegate, UIScrollViewDelegate, UINavigationBarDelegate {
     
     var businesses: [Business]!
-    
+    var filteredBusinesses : [Business]!
+    var loadingData = false
+    var loadingMoreView:InfiniteScrollActivityView?
+    var initialDistance = 1000.0
     @IBOutlet weak var tableView: UITableView!
+    let searchBar = UISearchBar()
+    var infiniteScrollFilters = [String : AnyObject]()
+    var filtersViewControllerInfiniteScroll: FiltersViewController?
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.delegate = self
         tableView.dataSource = self
+        searchBar.delegate = self
+        searchBar.sizeToFit()
+        searchBar.placeholder = "Restaurants"
+        self.navigationItem.titleView = searchBar
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 120
+        let frame = CGRect(x: 0, y: tableView.contentSize.height, width: tableView.bounds.size.width, height: InfiniteScrollActivityView.defaultHeight)
+        loadingMoreView = InfiniteScrollActivityView(frame: frame)
+        loadingMoreView!.isHidden = true
+        tableView.addSubview(loadingMoreView!)
         
-        Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
+        var insets = tableView.contentInset
+        insets.bottom += InfiniteScrollActivityView.defaultHeight
+        tableView.contentInset = insets
+        UINavigationBar.appearance().barTintColor = UIColor.red
+        navigationController?.navigationBar.barTintColor = UIColor.red
+        //UIBarButtonItem.appearance().tintColor = UIColor.white
+        //Since iOS 7.0 UITextAttributeTextColor was replaced by NSForegroundColorAttributeName
+       // UINavigationBar.appearance().titleTextAttributes = [UIColor.white]
+        Business.searchWithTerm(term: "Restuarants", completion: { (businesses: [Business]?, error: Error?) -> Void in
             
             self.businesses = businesses
+            self.filteredBusinesses = businesses
             self.tableView.reloadData()
             if let businesses = businesses {
                 for business in businesses {
@@ -69,9 +93,36 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     }
     
     func FiltersViewController(FiltersViewController: FiltersViewController, Filters: [String : AnyObject]) {
-        let categories = Filters["categories"] as! [String]
-        Business.searchWithTerm(term: "Restaurants", sort: nil, categories: categories, deals: nil){ (businesses: [Business]!, NSError) -> Void in
+        self.infiniteScrollFilters = Filters
+        var categories : [String]?
+        if (Filters["categories"] != nil && (Filters["categories"] as! [String]).count > 0){
+            categories = Filters["categories"] as! [String]
+        } else {
+            categories = nil
+        }
+        var dealOffer = false
+        if ((Filters["DealOffers"]?[0]) != nil){
+            dealOffer = true
+        }
+        var radius:Double?
+        if (Filters["Distance"]?[0] != nil){
+           radius = Filters["Distance"]?[0] as! Double
+        } else {
+            radius = nil
+        }
+        var sortBy:Int?
+        if (Filters["Sort By"]?[0] != nil){
+            sortBy = Filters["Sort By"]?[0] as! Int
+        } else {
+            sortBy = 0
+        }
+//        print(Filters["categories"]?[0])
+//        print(Filters["Sort By"]?[0])
+//        print(Filters["Distance"]?[0])
+//        print(Filters["DealOffers"]?[0])
+        Business.searchWithTerm(term: "Restaurants", sort: YelpSortMode(rawValue:sortBy!), categories: categories, distance: radius, deals: dealOffer){ (businesses: [Business]!, NSError) -> Void in
             self.businesses = businesses
+            self.filteredBusinesses = businesses
             self.tableView.reloadData()}
     }
     
@@ -79,6 +130,77 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         let navigationController = segue.destination as! UINavigationController
         let filtersViewController = navigationController.topViewController as! FiltersViewController
         filtersViewController.filtersDelegate = self
+        self.filtersViewControllerInfiniteScroll = filtersViewController
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        let searchPredicate1 = NSPredicate(format: "categories CONTAINS[C] %@", searchText)
+        let searchPredicate2 = NSPredicate(format: "name CONTAINS[C] %@", searchText)
+        let predicateCompound = NSCompoundPredicate.init(type: .or, subpredicates: [searchPredicate1,searchPredicate2])
+        self.businesses = self.businesses?.filter { predicateCompound.evaluate(with: $0) };
+        if searchText == "" {
+            self.businesses = self.filteredBusinesses
+        }
+        tableView.reloadData()
+    }
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        self.searchBar.showsCancelButton = true
+    }
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.showsCancelButton = false
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        self.businesses = self.filteredBusinesses
+        tableView.reloadData()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        if let index = self.tableView.indexPathForSelectedRow{
+            self.tableView.deselectRow(at: index, animated: true)
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if(!loadingData){
+            let scrollViewContentHeight = tableView.contentSize.height
+//            print("tableviewcontentsize \(tableView.contentSize.height)")
+//            print("tableVieHeight \(tableView.bounds.size.height)")
+//            print("scrollOffset \(scrollView.contentOffset.y)")
+            let scrollOffsetThreshold = scrollViewContentHeight - tableView.bounds.size.height
+            
+            // When the user has scrolled past the threshold, start requesting
+            if(scrollView.contentOffset.y > scrollOffsetThreshold && tableView.isDragging) {
+                loadingData = true
+                let frame = CGRect(x: 0, y: tableView.contentSize.height, width: tableView.bounds.size.width, height: InfiniteScrollActivityView.defaultHeight)
+                loadingMoreView?.frame = frame
+                loadingMoreView!.startAnimating()
+                if (self.infiniteScrollFilters.values.count > 0){
+                    var distanceArr = [Double]()
+                    if (self.infiniteScrollFilters["Distance"]?[0] != nil){
+                        let distanceFetch = self.infiniteScrollFilters["Distance"]?[0] as! Double + 5000.0
+                        distanceArr.append(distanceFetch)
+                        self.infiniteScrollFilters["Distance"] = distanceArr as AnyObject
+                    } else {
+                        distanceArr.append(5000.0)
+                        self.infiniteScrollFilters["Distance"] = distanceArr as AnyObject
+                    }
+                 //  print("************")
+                   FiltersViewController(FiltersViewController: self.filtersViewControllerInfiniteScroll!, Filters: self.infiniteScrollFilters)
+                    self.loadingMoreView!.stopAnimating()
+                } else {
+                //print("+++++++++++++")
+                self.initialDistance = self.initialDistance + 5000
+                Business.searchWithTerm(term: "Restuarants",distance: self.initialDistance, completion: { (businesses: [Business]?, error: Error?) -> Void in
+                    
+                    self.businesses = businesses
+                    self.filteredBusinesses = businesses
+                    self.tableView.reloadData()
+                    self.loadingData = false
+                    self.loadingMoreView!.stopAnimating()
+                    })
+                }
+            }
+        }
     }
     
     /*

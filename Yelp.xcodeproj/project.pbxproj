@@ -16,6 +16,7 @@
 		22AAAA991AEA0A9700A544AF /* Business.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAAA981AEA0A9700A544AF /* Business.swift */; };
 		22AAAA9C1AEA1EC300A544AF /* BusinessesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAAA9B1AEA1EC300A544AF /* BusinessesViewController.swift */; };
 		31D95BCBCA38716181E686D3 /* Pods_Yelp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C79C0AC126EDAA235847CEA2 /* Pods_Yelp.framework */; };
+		3719CC8F1E9AD4F300DF47B3 /* InfiniteScrollActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3719CC8E1E9AD4F300DF47B3 /* InfiniteScrollActivityView.swift */; };
 		374F43191E97501300FC41C6 /* CustomCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F43181E97501300FC41C6 /* CustomCell.swift */; };
 		374F431B1E977B2E00FC41C6 /* SwitchCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F431A1E977B2E00FC41C6 /* SwitchCell.swift */; };
 		374F431F1E9783E500FC41C6 /* FiltersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374F431E1E9783E500FC41C6 /* FiltersViewController.swift */; };
@@ -46,6 +47,7 @@
 		222D8A7C19CCFAE000D2DB53 /* YelpClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YelpClient.swift; sourceTree = "<group>"; };
 		22AAAA981AEA0A9700A544AF /* Business.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Business.swift; sourceTree = "<group>"; };
 		22AAAA9B1AEA1EC300A544AF /* BusinessesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BusinessesViewController.swift; sourceTree = "<group>"; };
+		3719CC8E1E9AD4F300DF47B3 /* InfiniteScrollActivityView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InfiniteScrollActivityView.swift; sourceTree = "<group>"; };
 		374F43181E97501300FC41C6 /* CustomCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomCell.swift; sourceTree = "<group>"; };
 		374F431A1E977B2E00FC41C6 /* SwitchCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwitchCell.swift; sourceTree = "<group>"; };
 		374F431E1E9783E500FC41C6 /* FiltersViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FiltersViewController.swift; sourceTree = "<group>"; };
@@ -168,6 +170,7 @@
 			children = (
 				374F43181E97501300FC41C6 /* CustomCell.swift */,
 				374F431A1E977B2E00FC41C6 /* SwitchCell.swift */,
+				3719CC8E1E9AD4F300DF47B3 /* InfiniteScrollActivityView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -396,6 +399,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3719CC8F1E9AD4F300DF47B3 /* InfiniteScrollActivityView.swift in Sources */,
 				22AAAA9C1AEA1EC300A544AF /* BusinessesViewController.swift in Sources */,
 				22AAAA991AEA0A9700A544AF /* Business.swift in Sources */,
 				374F431F1E9783E500FC41C6 /* FiltersViewController.swift in Sources */,

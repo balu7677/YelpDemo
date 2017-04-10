@@ -224,7 +224,7 @@
         <!--Navigation Controller-->
         <scene sceneID="uqu-rA-icD">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Mff-AJ-Txm" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="BusinessNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="Mff-AJ-Txm" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="TtA-ry-G7l">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
@@ -258,4 +258,5 @@
             <point key="canvasLocation" x="4021.5999999999999" y="361.16941529235385"/>
         </scene>
     </scenes>
+    <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
 </document>

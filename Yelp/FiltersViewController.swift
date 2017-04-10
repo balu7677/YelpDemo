@@ -16,13 +16,52 @@ class FiltersViewController: UIViewController, UITableViewDelegate, UITableViewD
 
     @IBOutlet weak var tableView: UITableView!
     var categories = [[String:String]]()
-    var selectedCategories = [Int: [Int:Bool]]()
+    var hidden:[Bool] = [true, true, true, true]
+    var selectedCategories = [IndexPath : Bool]()
     var sections = ["DealOffers","Distance","Sort By","Category"]
     var filtersDelegate: FiltersViewControllerDelegate?
-    var distance = ["0.3 mile","1 mile","5 miles","20 miles"]
+    var distance = ["0.3","1","5","20"]
     var sortBy = ["Best Match", "Distance", "Highest Rated"]
     var dealOffers = ["Offering a Deal"]
     var mainDict = [String : [AnyObject]]()
+    var sectionsDict = ["DealOffers","Distance","Sort By","Category"]
+    var distanceDict = ["0.3":500,"1":1700,"5":8000,"20":32000]
+    var sortByDict = ["Best Match": 0, "Distance":1, "Highest Rated":2]
+    var dealOffersDict = ["Offering a Deal":true]
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+        let label = UILabel(frame: CGRect(x: 15, y: 5, width: tableView.frame.width, height: 20))
+        label.textAlignment = .left
+        label.font = UIFont(name:"Helvetica-Semibold", size: 18.0)
+        label.textColor = UIColor.white
+        view.backgroundColor = UIColor.red
+        label.text = sections[section] + "  -> Click to expand/collapse"
+        label.tag = section
+        view.addSubview(label)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapFunction))
+        label.isUserInteractionEnabled = true
+        label.addGestureRecognizer(tap)
+        return view
+    }
+    
+    func tapFunction(sender:UITapGestureRecognizer) {
+        let section = sender.view!.tag
+        let sectionName = sections[section]
+        let count = mainDict[sectionName]?.count
+        let indexPaths = (0..<count!).map { i in return IndexPath(item: i, section: section)  }
+        
+        hidden[section] = !hidden[section]
+        
+        tableView?.beginUpdates()
+        if hidden[section] {
+            tableView?.deleteRows(at: indexPaths, with: .fade)
+        } else {
+            tableView?.insertRows(at: indexPaths, with: .fade)
+        }
+        tableView?.endUpdates()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,7 +89,11 @@ class FiltersViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let sectionName = sections[section]
-        return (mainDict[sectionName]?.count)!
+        if hidden[section] {
+            return 0
+        } else {
+            return (mainDict[sectionName]?.count)!
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -64,7 +107,7 @@ class FiltersViewController: UIViewController, UITableViewDelegate, UITableViewD
         
         
         cell.delegate = self
-        cell.onSwitch.isOn = selectedCategories[indexPath.section]?[indexPath.row] ?? false
+        cell.onSwitch.isOn = selectedCategories[indexPath] ?? false
         return cell
     }
     
@@ -74,15 +117,40 @@ class FiltersViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     func SwitchCell(SwitchCell: SwitchCell, cellSelected: Bool) {
         let indexPath = tableView.indexPath(for: SwitchCell)
-        selectedCategories[(indexPath?.section)!]?[(indexPath?.row)!] = cellSelected
-        //print(selectedCategories[(indexPath?.section)!]?[(indexPath?.row)!])
-        for (k,v) in selectedCategories {
-            for (a,b) in v{
-                if b {
-                    print("Section: \(k) and row: \(a)")
+    //    innerDict[(sections.count * (indexPath?.section)!) + (indexPath?.row)!] = cellSelected
+        selectedCategories[indexPath!] = cellSelected
+        if sections[(indexPath?.section)!] == "Distance" {
+            let sectionNumber = indexPath?.section
+            let indexSet: IndexSet = [sectionNumber!]
+            for index in 0...3 {
+                if(index != indexPath?.row){
+                    let iPath = NSIndexPath(row: index, section: sectionNumber!)
+                    selectedCategories[iPath as IndexPath] = false
                 }
             }
+            tableView.reloadSections(indexSet, with: UITableViewRowAnimation.none)
+        } else if sections[(indexPath?.section)!] == "Sort By"{
+            let sectionNumber = indexPath?.section
+            let indexSet: IndexSet = [sectionNumber!]
+            for index in 0...2 {
+                if(index != indexPath?.row){
+                    let iPath = NSIndexPath(row: index, section: sectionNumber!)
+                    selectedCategories[iPath as IndexPath] = false
+                }
+            }
+            tableView.reloadSections(indexSet, with: UITableViewRowAnimation.none)
         }
+            
+       // selectedCategories[(indexPath?.section)!] = innerDict
+        //print(selectedCategories[(indexPath?.section)!]?[(indexPath?.row)!])
+//
+//        for (k,v) in selectedCategories {
+//            if(v) {
+//                    print("Section: \(k.section) and row: \(k.row)")
+//                }
+//            }
+//        print("************")
+//
     }
     
     @IBAction func onCancel(_ sender: Any) {
@@ -92,20 +160,17 @@ class FiltersViewController: UIViewController, UITableViewDelegate, UITableViewD
     @IBAction func onSearch(_ sender: Any) {
         var filters = [String:AnyObject]()
         var categoriesSelected = [String]()
-        var sortBySelected = [String]()
-        var distanceSelected = [String]()
-        var dealSelected = [String]()
-        for (key,section) in selectedCategories {
-            for(rowNumber,isSelected) in section {
-                if (isSelected && (sections[key] == "Category")) {
-                    categoriesSelected.append(mainDict[sections[key]]![rowNumber]["code"]! as! String)
-                } else if (isSelected && (sections[key] == "Sort By")){
-                    sortBySelected.append(mainDict[sections[key]]?[rowNumber] as! String)
-                } else if (isSelected && (sections[key] == "Distance")){
-                    distanceSelected.append(mainDict[sections[key]]?[rowNumber] as! String)
-                } else if (isSelected && (sections[key] == "DealOffers")){
-                    dealSelected.append(mainDict[sections[key]]?[rowNumber] as! String)
-                }
+        var sortBySelected = [Int]()
+        var distanceSelected = [Double]()
+        var dealSelected = [Bool]()
+        for (key,isSelected) in selectedCategories {
+            if (isSelected && (sections[key.section] == "Category")) {                    categoriesSelected.append(mainDict[sections[key.section]]![key.row]["code"]! as! String)
+            } else if (isSelected && (sections[key.section] == "Sort By")){
+                    sortBySelected.append(sortByDict[mainDict[sections[key.section]]?[key.row] as! String]!)
+            } else if (isSelected && (sections[key.section] == "Distance")){
+                    distanceSelected.append(Double(distanceDict[mainDict[sections[key.section]]?[key.row] as! String]!))
+            } else if (isSelected && (sections[key.section] == "DealOffers")){
+                    dealSelected=([dealOffersDict[mainDict[sections[key.section]]?[key.row] as! String]!])
             }
         }
         if categoriesSelected.count > 0{

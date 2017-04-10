@@ -16,6 +16,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+//        window = UIWindow(frame: UIScreen.main.bounds)
+//        UINavigationBar.appearance().barTintColor = UIColor.red
+//        let storyBoard = UIStoryboard(name: "Main", bundle: nil)
+//        
+//        let businessNavigationController = storyBoard.instantiateViewController(withIdentifier: "BusinessNavigationController") as! UINavigationController
+//        let businessViewController = businessNavigationController.topViewController as! BusinessesViewController
+//        window?.rootViewController = businessViewController
+//        window?.makeKeyAndVisible()
         return true
     }
 
